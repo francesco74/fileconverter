@@ -18,12 +18,12 @@ function displayFileName() {
   
     if (file) {
       var formData = new FormData();
-      formData.append('msg', file);
+      formData.append('file', file);
   
       // Mostra il messaggio di caricamento
       document.getElementById('loadingMessage').style.display = 'block';
   
-      fetch('https://msg2eml.intranet.provincia.lucca/convert', {
+      fetch('http://fileconverter.intranet.provincia.lucca:8080/convert', {
         method: 'POST',
         body: formData
       })

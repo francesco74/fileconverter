@@ -4,6 +4,7 @@ COPY requirements.txt /
 RUN pip3 install -r /requirements.txt
 
 RUN apt-get update 
+RUN apt-get install libemail-outlook-message-perl -y
 RUN apt-get install libgl1 -y
 RUN apt-get install libglib2.0-0 -y
 
