@@ -23,7 +23,7 @@ function displayFileName() {
       // Mostra il messaggio di caricamento
       document.getElementById('loadingMessage').style.display = 'block';
   
-      fetch('http://fileconverter.intranet.provincia.lucca:8080/convert', {
+      fetch('https://fileconverter.intranet.provincia.lucca/convert', {
         method: 'POST',
         body: formData
       })
