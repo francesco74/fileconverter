@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Caricamento e Elaborazione di File</title>
+  <link rel="stylesheet" href="static/styles.css">
+</head>
+<body>
+
+<div id="uploadContainer">
+  <h2>MSG2EML converter</h2>
+  <div class="description">
+    Questo servizio permette di convertire una email in formato Outlook (file in formato .msg) in una email che potrai aprire mediante programmi di posta elettronica come Thunderbird (file in formato .eml)<br />
+    Inizia selezionado il file dal tuo computer e premi il tasto "Carica e converti".<br />
+    Il servizio convertirà il file e ti darà la possibilità di scaricarlo in formato .eml ovvero convertito
+
+  </div>
+  <div class="fileUpload">
+  <label for="fileInput" class="button button-generic" id="customUpload">Seleziona un file</label>
+  <input type="file" id="fileInput" onchange="displayFileName()" />
+  </div>
+  <div id="fileName"></div>
+  <button class="button button-generic" id="uploadButton" onclick="uploadFile()" disabled>Carica e converti</button>
+  <div id="loadingMessage">Caricamento in corso...</div>
+  <a id="downloadLink" style="display: none" class="button button-download">Scarica il messaggio convertito</a>
+  <!-- div id="result"></div -->
+</div>
+
+<script src="static/script.js"></script>
+
+</body>
+</html>
