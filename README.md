@@ -1,5 +1,3 @@
-NOT WORKING NOW
-
 # msgconvert
 
 A dockerized webservice to convert Microsoft Outlook .msg files to .eml
