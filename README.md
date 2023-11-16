@@ -1,42 +1,29 @@
 # msgconvert
 
 A dockerized webservice to convert Microsoft Outlook .msg files to .eml
-(message/rfc822) format.
+(message/rfc822) format and .pdf to .docx format
 
 ## Description
 
-msgconvert uses the Perl module Email::Outlook::Message for conversion.
-It exposes just a single endpoint for uploading an .msg file and returns the
-converted .eml. The webservice is written in Python using the aiohttp web server.
+fileconverter uses the Perl module Email::Outlook::Message for .eml conversion and pdf2docx for .pdf conversion.
+It exposes just a single endpoint for uploading an .msg or .pdf file and returns the
+converted .eml or .docx. 
+
+The webservice is written in Python using the aiohttp web server.
 
 ## Usage
 
 To start the webservice just run
 ```
-docker-compose up
+docker build -t fileconverter:latest .
+docker run -p 8080:8080 fileconverter:latest
 ```
 
-The .msg file must be uploaded as multipart/form-data with a part named `msg`
-containing the .msg file.
+The .msg or .pdf file must be uploaded as multipart/form-data with a part named `file`
+containing the .msg or .pdf file.
 
 Example:
 
 ```
-curl -F "msg=@tests/sample.msg" http://localhost:3000/
-```
-
-## Testing
-
-To execute the tests, Python 3.8 with pytest and requests is required.
-
-```
-python3.8 -m venv venv
-./venv bin/activate
-pip install pytest requests
-```
-
-Tests are run by executing pytest:
-
-```
-pytest
+curl -F "file=@tests/sample.msg" http://localhost:8080/
 ```
