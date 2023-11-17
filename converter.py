@@ -6,6 +6,7 @@ import os.path
 import subprocess
 import logging
 from pdf2docx import Converter
+import time
 
 CHUNK_SIZE = 65536
 
@@ -60,23 +61,25 @@ async def converter(request):
                 break
 
             if part.name == 'file':
-                logger.debug('Adding data to form_data')
                 form_data['file'] = await save_part_to_file(part, temp_dir)
+            elif part.name == 'outputFormat':
+                form_data['outputFormat'] = await part.text()
             else:
                 logger.error('Parameter name  %s', part.name)
 
-        if 'file' in form_data:
+        if ('file' in form_data) and ('outputFormat' in form_data):
             logger.debug('Converting %s file', form_data['file'])
 
             filename, file_extension = os.path.splitext(form_data['file'])
             logger.debug('filename base %s', filename)
             logger.debug('filename extension %s', file_extension)
+            requested_file_extension = form_data['outputFormat']
 
-            if file_extension == '.msg':
-                logger.debug('Converting MSG file')
+            outfilename = os.path.join(temp_dir, filename + '.' + requested_file_extension)
+            logger.debug('outfilename: %s', outfilename)
 
-                outfilename = os.path.join(
-                    temp_dir, filename + '.eml')
+            if requested_file_extension == 'eml':
+                logger.debug('Converting MSG file to EML')
                 res = subprocess.run(
                     ['msgconvert', '--outfile', outfilename, form_data['file']],
                     capture_output=True,
@@ -84,6 +87,8 @@ async def converter(request):
                 )
 
                 if res.returncode == 0:
+                    logger.debug('Conversion result %s', res.stdout)
+                    
                     with open(outfilename, 'rb') as outfile:
                         content = outfile.read()
 
@@ -101,14 +106,13 @@ async def converter(request):
                     await response.write_eof()
                     return response
                 else:
-                    logger.error('Conversion failed. %s', res.stderr)
+                    logger.error('Conversion failed. %s - %s', res.stdout, res.stderr)
                     return web.Response(
                         status=500, text=f"Conversion failed. {res.stderr}")
-            elif file_extension == '.pdf':
-                logger.debug('Converting PDF file')
+                
+            elif requested_file_extension == 'docx':
+                logger.debug('Converting PDF file to DOCX')
 
-                outfilename = os.path.join(
-                    temp_dir, filename + '.docx')
                 cv = Converter(form_data['file'])
                 cv.convert(outfilename)      # all pages by default
                 cv.close()
@@ -129,10 +133,44 @@ async def converter(request):
                 await response.write(content)
                 await response.write_eof()
                 return response
-                
-            logger.debug('Unknown extension.')
+            
+            elif requested_file_extension == 'odt':
+                logger.debug('Converting PDF file %s to ODT %s', form_data['file'], outfilename)
+
+                res = subprocess.run(
+                    ['pdf2odt', '--pdf', form_data['file'], outfilename],
+                    capture_output=True,
+                    text=True,
+                )
+
+                if res.returncode == 0:
+                    logger.debug('Conversion result %s', res.stdout)
+                                 
+                    with open(outfilename, 'rb') as outfile:
+                        content = outfile.read()
+
+                    response = web.StreamResponse(
+                        status=200,
+                        reason='OK',
+                        headers={
+                            'Content-Type': 'application/vnd.oasis.opendocument.text',
+                            'Access-Control-Allow-Origin': '*',
+                        },
+                    )
+                    await response.prepare(request)
+
+                    await response.write(content)
+                    await response.write_eof()
+                    return response
+                else:
+                    logger.error('Conversion failed. %s - %s', res.stdout, res.stderr)
+                    return web.Response(
+                        status=500, text=f"Conversion failed. {res.stderr}")
+            
+            else:    
+                logger.debug('Unknown extension.')
         else:
-            logger.debug('No file in form_data.')
+            logger.debug('No file in form_data or outputFormat.')
 
     logger.info('Bad request. No file provided.')
     return web.Response(status=400, text="No file provided.")

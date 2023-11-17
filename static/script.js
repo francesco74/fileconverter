@@ -1,53 +1,121 @@
-function displayFileName() {
-    var input = document.getElementById('fileInput');
-    var fileNameDisplay = document.getElementById('fileName');
-    var uploadButton = document.getElementById('uploadButton');
-      
-    if (input.files.length > 0) {
-      fileNameDisplay.innerHTML = 'File selezionato: ' + input.files[0].name;
-      uploadButton.disabled = false; // Abilita il pulsante quando un file è selezionato
-    } else {
-      fileNameDisplay.innerHTML = '';
-      uploadButton.disabled = true; // Disabilita il pulsante quando nessun file è selezionato
+function toggleLoadingMessage(show) {
+  const loadingMessage = document.getElementById('loadingMessage');
+  loadingMessage.style.display = show ? 'block' : 'none';
+}
+
+function resetUI() {
+  const fileInput = document.getElementById('fileInput');
+  const formatSelector = document.getElementById('outputFormat');
+  const fileNameDisplay = document.getElementById('fileName');
+  const uploadButton = document.getElementById('uploadButton');
+  const loadingMessage = document.getElementById('loadingMessage');
+  const timeoutMessage = document.getElementById('timeoutMessage');
+  const loadingProgress = document.getElementById('loadingProgress');
+  const downloadLink = document.getElementById('downloadLink');
+
+  fileInput.value = null;
+  formatSelector.value = 'eml';
+  formatSelector.setAttribute('disabled', true);
+  fileNameDisplay.innerHTML = '';
+  uploadButton.disabled = true;
+  loadingMessage.style.display = 'none';
+  timeoutMessage.style.display = 'none';
+  loadingProgress.style.display = 'none';
+  downloadLink.style.display = 'none';
+}
+
+document.getElementById('fileInput').addEventListener('change', function () {
+  const formatSelector = document.getElementById('outputFormat');
+  const file = this.files[0];
+  const fileNameDisplay = document.getElementById('fileName');
+  const uploadButton = document.getElementById('uploadButton');
+
+  if (file) {
+    fileNameDisplay.innerHTML = 'File selezionato: ' + file.name;
+    uploadButton.disabled = false;
+
+    formatSelector.removeAttribute('disabled');
+    formatSelector.options[0].disabled = !file.name.endsWith('.msg');
+    formatSelector.options[1].disabled = !file.name.endsWith('.pdf');
+    // formatSelector.options[2].disabled = !file.name.endsWith('.pdf');
+
+    if (file.name.endsWith('.msg')) {
+      formatSelector.value = 'eml'
+    } 
+
+    if (file.name.endsWith('.pdf')) {
+      formatSelector.value = 'docx'
     }
+
+  } else {
+    formatSelector.value = '';
+    formatSelector.setAttribute('disabled', true);
+
+    fileNameDisplay.innerHTML = '';
+    uploadButton.disabled = true;
   }
-  
-  function uploadFile() {
-    var input = document.getElementById('fileInput');
-    var file = input.files[0];
-  
-    if (file) {
-      var formData = new FormData();
-      formData.append('file', file);
-  
-      // Mostra il messaggio di caricamento
-      document.getElementById('loadingMessage').style.display = 'block';
-  
-      fetch('https://fileconverter.intranet.provincia.lucca/convert', {
-        method: 'POST',
-        body: formData
-      })
-      .then(response => response.blob())
-      .then(blob => {
-        // Nascondi il messaggio di caricamento
-        document.getElementById('loadingMessage').style.display = 'none';
-  
-        var url = window.URL.createObjectURL(blob);
-        var a = document.getElementById('downloadLink');
+
+
+});
+
+document.getElementById('downloadLink').addEventListener('click', function () {
+  // Chiamare resetUI() dopo che l'utente ha cliccato per scaricare il file elaborato
+  resetUI();
+});
+
+document.getElementById('uploadButton').addEventListener('click', async function () {
+  const input = document.getElementById('fileInput');
+  const file = input.files[0];
+
+  if (file) {
+    const formatSelector = document.getElementById('outputFormat');
+    const selectedFormat = formatSelector.options[formatSelector.selectedIndex].value;
+
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('outputFormat', selectedFormat);
+
+    try {
+      toggleLoadingMessage(true); // Mostra il messaggio di caricamento
+
+      const response = await Promise.race([
+        fetch('https://fileconverter.intranet.provincia.lucca/convert', {
+          method: 'POST',
+          body: formData,
+          timeout: 300000, // Timeout di 5 minuti
+        }),
+        new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout scaduto')), 300000)),
+      ]);
+
+      if (response.ok) {
+        const resultFileName = file.name.replace(/\.[^.]+$/, `.${selectedFormat}`);
+        const resultBlob = await response.blob();
+
+        toggleLoadingMessage(false); // Nascondi il messaggio di caricamento
+
+        const url = window.URL.createObjectURL(resultBlob);
+        const a = document.getElementById('downloadLink');
         a.href = url;
-        a.download = 'risultato.eml';
+        a.download = resultFileName;
         a.style.display = 'block';
-  
-        //var resultElement = document.getElementById('result');
-        //resultElement.innerHTML = 'Risultato: <a href="' + url + '" download>Scarica risultato</a>';
-      })
-      .catch(error => {
-        console.error('Errore durante la richiesta:', error);
-        // Nascondi il messaggio di caricamento in caso di errore
-        document.getElementById('loadingMessage').style.display = 'none';
-      });
-    } else {
-      alert('Seleziona un file prima di procedere.');
+      } else {
+        console.error('Errore nella richiesta:', response.statusText);
+        alert('Errore durante l\'elaborazione del file.');
+      }
+    } catch (error) {
+      console.error('Errore generale:', error);
+
+      if (error instanceof DOMException && error.name === 'AbortError') {
+        alert('La richiesta è stata annullata.');
+      } else if (error.message === 'Timeout scaduto') {
+        alert('Timeout scaduto. Riprova con un file più piccolo o verifica la connessione.');
+      } else {
+        alert('Si è verificato un errore durante l\'elaborazione del file.');
+      }
+    } finally {
+      toggleLoadingMessage(false);
     }
+  } else {
+    alert('Seleziona un file prima di procedere.');
   }
-  
+});
