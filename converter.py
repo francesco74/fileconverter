@@ -135,10 +135,17 @@ async def converter(request):
                 return response
             
             elif requested_file_extension == 'odt':
-                logger.debug('Converting PDF file %s to ODT %s', form_data['file'], outfilename)
+                logger.debug('Converting PDF file %s to ODT %s (step 1)', form_data['file'], outfilename)
+
+                temp_outfilename = os.path.join(temp_dir, filename + '.docx')
+                cv = Converter(form_data['file'])
+                cv.convert(temp_outfilename)  # all pages by default
+                cv.close()
+
+                logger.debug('Converting PDF file %s to ODT %s (step 2)', form_data['file'], outfilename)
 
                 res = subprocess.run(
-                    ['pdf2odt', '--pdf', form_data['file'], outfilename],
+                    ['pandoc', '-s', temp_outfilename, '-o', outfilename],
                     capture_output=True,
                     text=True,
                 )

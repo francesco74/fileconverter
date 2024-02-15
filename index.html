@@ -9,13 +9,16 @@
 <body>
 
 <div id="uploadContainer">
-  <h2>MSG2EML converter</h2>
+  <h2>File converter</h2>
   <div class="description">
     Questo servizio permette di convertire due tipologie di file:
     <ul>
       <li>una email in formato Outlook (file in formato .msg) in una email che potrai aprire mediante programmi di posta elettronica come Thunderbird (file in formato .eml)</li>
       <li>un file in formato .pdf in uno in formato .docx quindi permette di rendere editabile un file .pdf se non troppo complesso</li>
     </ul>
+    Si ricorda che la conversione da PDF ad un documento editabile (.docx o .odt) non avviene quasi mai in maniera perfetta e tutto dipende dalla struttura del documento iniziale.<br />
+    Esiste comunque la possibilità di editare un file .pdf in maniera abbastanza "comoda" utilizzando direttamente LibreOffice andando ad aprire il file .pdf come un normale file.
+    <br />
     <br />
     Inizia selezionado il file dal tuo computer e premi il tasto "Carica e converti".<br />
     Il servizio convertirà il file e ti darà la possibilità di scaricarlo in formato .eml ovvero convertito
@@ -26,14 +29,13 @@
     <select id="outputFormat" disabled>
       <option value="eml">EML</option>
       <option value="docx" disabled>DOCX</option>
-      <!-- <option value="odt" disabled>ODT</option> -->
+      <option value="odt" disabled>ODT</option> 
     </select>
   </div>
   <div id="fileName"></div>
   <button class="button button-generic" id="uploadButton" disabled>Carica e converti</button>
   <div id="loadingMessage" style="display: none;">Conversione in corso...<br/>A seconda della dimensione e della struttura del file da convertire, potrebbe volerci un po' di tempo</div>
   <div id="timeoutMessage" style="display: none; color: red;">Timeout scaduto. Riprova con un file più piccolo o verifica la connessione.</div>
-  <progress id="loadingProgress" value="0" max="100" style="display: none;"></progress>
   <a id="downloadLink" style="display: none" class="button button-download">Scarica il messaggio convertito</a>
 </div>
 

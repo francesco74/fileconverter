@@ -10,7 +10,6 @@ function resetUI() {
   const uploadButton = document.getElementById('uploadButton');
   const loadingMessage = document.getElementById('loadingMessage');
   const timeoutMessage = document.getElementById('timeoutMessage');
-  const loadingProgress = document.getElementById('loadingProgress');
   const downloadLink = document.getElementById('downloadLink');
 
   fileInput.value = null;
@@ -20,7 +19,6 @@ function resetUI() {
   uploadButton.disabled = true;
   loadingMessage.style.display = 'none';
   timeoutMessage.style.display = 'none';
-  loadingProgress.style.display = 'none';
   downloadLink.style.display = 'none';
 }
 
@@ -37,7 +35,7 @@ document.getElementById('fileInput').addEventListener('change', function () {
     formatSelector.removeAttribute('disabled');
     formatSelector.options[0].disabled = !file.name.endsWith('.msg');
     formatSelector.options[1].disabled = !file.name.endsWith('.pdf');
-    // formatSelector.options[2].disabled = !file.name.endsWith('.pdf');
+    formatSelector.options[2].disabled = !file.name.endsWith('.pdf');
 
     if (file.name.endsWith('.msg')) {
       formatSelector.value = 'eml'
