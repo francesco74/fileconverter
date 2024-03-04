@@ -174,8 +174,43 @@ async def converter(request):
                     return web.Response(
                         status=500, text=f"Conversion failed. {res.stderr}")
             
+            elif requested_file_extension == 'zip':
+                logger.debug('Converting DAT file to ZIP')
+
+                f = open(outfilename,'w')
+                res = subprocess.run(
+                    ['winmaildat2tar', '-f', 'zip', form_data['file']],
+                    text=True,
+                    stdout=f
+                )
+                f.close
+
+                if res.returncode == 0:
+                    logger.debug('Conversion result %s', res.stdout)
+                    
+                    with open(outfilename, 'rb') as outfile:
+                        content = outfile.read()
+
+                    response = web.StreamResponse(
+                        status=200,
+                        reason='OK',
+                        headers={
+                            'Content-Type': 'message/rfc822',
+                            'Access-Control-Allow-Origin': '*',
+                        },
+                    )
+                    await response.prepare(request)
+
+                    await response.write(content)
+                    await response.write_eof()
+                    return response
+                else:
+                    logger.error('Conversion failed. %s - %s', res.stdout, res.stderr)
+                    return web.Response(
+                        status=500, text=f"Conversion failed. {res.stderr}")
+            
             else:    
-                logger.debug('Unknown extension.')
+                logger.debug(f'Unknown extension. {requested_file_extension}')
         else:
             logger.debug('No file in form_data or outputFormat.')
 

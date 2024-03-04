@@ -36,10 +36,15 @@ document.getElementById('fileInput').addEventListener('change', function () {
     formatSelector.options[0].disabled = !file.name.endsWith('.msg');
     formatSelector.options[1].disabled = !file.name.endsWith('.pdf');
     formatSelector.options[2].disabled = !file.name.endsWith('.pdf');
+    formatSelector.options[3].disabled = !file.name.endsWith('.dat');
 
     if (file.name.endsWith('.msg')) {
       formatSelector.value = 'eml'
     } 
+
+    if (file.name.endsWith('.dat')) {
+      formatSelector.value = 'zip'
+    }
 
     if (file.name.endsWith('.pdf')) {
       formatSelector.value = 'docx'
